@@ -16,7 +16,7 @@ n_samples, n_features = data.shape
 sample_train, sample_test, label_train, label_test = train_test_split(
     data, target, test_size=test_size, random_state=2234
 )
-
+#test
 sc = StandardScaler()
 sample_train = sc.fit_transform(sample_train)
 sample_test = sc.transform(sample_test)
