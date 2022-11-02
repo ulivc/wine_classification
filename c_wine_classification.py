@@ -40,10 +40,14 @@ class LogisticRegression(nn.Module):
         super(LogisticRegression, self).__init__()
         self.linear = nn.Linear(n_input_features, 1)
         self.linear2 = nn.Linear(n_input_features, 1)
+        #self.linear3 = nn.Linear(n_input_features, 1)
+        #self.linear4 = nn.Linear(n_input_features, 1)
 
     def forward(self, x):
         # kann ich y_predicted hier auch anders nennen ohne es später zu verändern?
+        #y_predicted = torch.relu(self.linear4(x))
         y_predicted = torch.sigmoid(self.linear(x))
+        #y_predicted = self.linear3(x)
         y_predicted = torch.relu(self.linear2(x))
         return y_predicted
 
@@ -51,11 +55,11 @@ class LogisticRegression(nn.Module):
 model = LogisticRegression(n_features)
 
 # loss and optimizer
-learning_rate = 0.2
+learning_rate = 0.05
 criterion = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 # training loopt
-num_epochs = 100000
+num_epochs = 10000
 
 for epoch in range(num_epochs):
     # forward pass and loss
@@ -72,7 +76,8 @@ for epoch in range(num_epochs):
     optimizer.zero_grad()
 
     if (epoch + 1) % 1000 == 0:
-        print(f"epoch: {epoch+1}, loss = {loss.item():.4f}")
+        print(f"epoch: {epoch+1}, loss = {loss.item():.8f}") 
+    #print(f"epoch: {epoch+1}, loss = {loss.item():.8f}")
 
 with torch.no_grad():
     y_predicted = model(sample_test)
