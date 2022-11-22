@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 # configuration
-feature_size = 10
-training_size = 500
+feature_size = 2
+training_size = 5
 algorithm_globals.random_seed = 3142
 np.random.seed(algorithm_globals.random_seed)
 
@@ -71,6 +71,7 @@ plt.title(f"{accuracy}_{feature_size}_wine_classification")
 print(plt.show())
 fig.savefig(f"plots/qcosts_{accuracy}_{feature_size}_{training_size}.png")
 
+print(vqc.predict(TEST_DATA))
 # create array for plot
 correct_result = [0,0,0]
 wrong_result = [0,0,0]
