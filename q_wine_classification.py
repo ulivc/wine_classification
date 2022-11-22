@@ -10,19 +10,16 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 # configuration
-feature_size = 2
-training_size = 5
+feature_size = 10
+training_size = 500
 algorithm_globals.random_seed = 3142
 np.random.seed(algorithm_globals.random_seed)
 
 # prepare data
 TRAIN_DATA, train_labels_oh, TEST_DATA, test_labels_oh = wine(
-    training_size=training_size, test_size=5, n=feature_size, one_hot=True
+    training_size=training_size, test_size=20, n=feature_size, one_hot=True
 )
-""" encoder = OneHotEncoder()
-train_labels_oh = encoder.fit_transform(TRAIN_LABELS.reshape(-1, 1)).toarray()
-test_labels_oh = encoder.fit_transform(TEST_LABELS.reshape(-1,1)).toarray()
- """
+
 # store results for plotting
 class OptimizerLog:
     """Log to store optimizer's intermediate results"""
@@ -46,7 +43,7 @@ class OptimizerLog:
 FEATURE_MAP = ZZFeatureMap(feature_dimension=feature_size, reps=2)
 # variational circuit
 VAR_FORM = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=2)
-
+print(VAR_FORM.decompose().draw())
 initial_point = np.random.random(VAR_FORM.num_parameters)
 log = OptimizerLog()
 
@@ -74,50 +71,47 @@ plt.title(f"{accuracy}_{feature_size}_wine_classification")
 print(plt.show())
 fig.savefig(f"plots/qcosts_{accuracy}_{feature_size}_{training_size}.png")
 
+# create array for plot
+correct_result = [0,0,0]
+wrong_result = [0,0,0]
+for label, pred in zip(test_labels_oh, vqc.predict(TEST_DATA)):
+    if np.array_equal(label, pred):
+        print(pred)
+        if pred[0] == 1:
+            correct_result[0] += 1
+        if pred[1] == 1:
+            correct_result[1] += 1
+        if pred[2] == 1:
+            correct_result[2] += 1   
+            
+    else:
+        if pred[0] == 1:
+            wrong_result[0] += 1
+        if pred[1] == 1:
+            wrong_result[1] += 1
+        if pred[2] == 1:
+            wrong_result[2] += 1  
 
-fig1 = plt.figure(figsize=(9, 6))
+fig1 = plt.figure()
+# Daten für drei Teams erstellen
+classes = ['0', '1', '2']
 
-for feature, label in zip(TRAIN_DATA, train_labels_oh):
-    COLOR = "C1" if label[0] == 0 else "C0"
-    plt.scatter(feature[0], feature[1], marker="o", s=100, color=COLOR)
+# Diagrammparameter definieren
+N = 3 
+barWidth = .5
+xloc = np.arange(N)
 
-for feature, label, pred in zip(TEST_DATA, test_labels_oh, vqc.predict(TEST_DATA)):
-    COLOR = "C1" if pred[0] == 0 else "C0"
-    plt.scatter(feature[0], feature[1], marker="s", s=100, color=COLOR)
-    if not np.array_equal(label, pred):  # mark wrongly classified
-        plt.scatter(
-            feature[0],
-            feature[1],
-            marker="o",
-            s=500,
-            linewidths=2.5,
-            facecolor="none",
-            edgecolor="C3",
-        )
+# Gestapeltes Balkendiagramm erstellen
+p1 = plt.bar(xloc, correct_result, width=barWidth)
+p2 = plt.bar(xloc, wrong_result, bottom=correct_result, width=barWidth)
 
-legend_elements = [
-    Line2D([0], [0], marker="o", c="w", mfc="C1", label="A", ms=10),
-    Line2D([0], [0], marker="o", c="w", mfc="C0", label="B", ms=10),
-    Line2D([0], [0], marker="s", c="w", mfc="C1", label="predict A", ms=10),
-    Line2D([0], [0], marker="s", c="w", mfc="C0", label="predict B", ms=10),
-    Line2D(
-        [0],
-        [0],
-        marker="o",
-        c="w",
-        mfc="none",
-        mec="C3",
-        label="wrongly classified",
-        mew=2,
-        ms=15,
-    ),
-]
-
-plt.legend(handles=legend_elements, bbox_to_anchor=(1, 1), loc="upper left")
-
-plt.title("Training & Test Data")
-plt.xlabel("x")
-plt.ylabel("y")
+# Beschriftungen, Titel, Striche und Legende hinzufügen
+plt.ylabel('count')
+plt.xlabel('classes')
+plt.title('Results')
+plt.xticks(xloc, ('0', '1', '2'))
+plt.yticks(np.arange(0, 41, 5))
+plt.legend((p1[0], p2[0]), ('True', 'False'))
 print(plt.show())
 fig1.savefig(f"plots/qresults_{accuracy}_{feature_size}_{training_size}.png")
 
