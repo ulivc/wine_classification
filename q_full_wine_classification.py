@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 # configuration
-feature_size = 2
+# kleinste feature_size ist 3
+feature_size = 5
 training_size = 10
 
 algorithm_globals.random_seed = 3142
@@ -58,7 +59,7 @@ def label_probability(results):
             probabilities[2] += counts / shots
         if bitstring[1] == "1":
             probabilities[1] += counts / shots
-        if bitstring[1] == "1":
+        if bitstring[2] == "1":
             probabilities[0] += counts / shots
     return probabilities
 
@@ -126,7 +127,7 @@ class OptimizerLog:
 
 # Set up the optimization
 log = OptimizerLog()
-optimizer = SPSA(maxiter=100, callback=log.update)
+optimizer = SPSA(maxiter=2, callback=log.update)
 
 initial_point = np.random.random(VAR_FORM.num_parameters)
 
@@ -145,9 +146,7 @@ opt_value = result.fun
 
 
 def test_classifier(data, labels, variational):
-
     probability = classification_probability(data, variational)
-
     predictions = []
     for probabilities in probability:
         if probabilities[0] >= probabilities[1]:
