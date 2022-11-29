@@ -48,10 +48,11 @@ def circuit_instance(data, variational):
         parameters[p] = variational[i]
     return WINE_CIRCUIT.assign_parameters(parameters)
 
+
 def label_probability(results):
     """Converts a dict of bitstrings and their counts to parities and their counts"""
     shots = sum(results.values())
-    probabilities = {0: 0.0, 1: 0.0, 2:0.0}
+    probabilities = {0: 0.0, 1: 0.0, 2: 0.0}
     for bitstring, counts in results.items():
         if bitstring[0] == "1":
             probabilities[2] += counts / shots
@@ -82,11 +83,13 @@ def classification_probability(data, variational):
 
     return classification
 
+
 # loss function
 def cross_entropy_loss(classification, expected):
     """Calculate accuracy of predictions using cross entropy loss."""
     p = classification.get(expected)
-    return -np.log(p +1e-10)
+    return -np.log(p + 1e-10)
+
 
 # cost function
 def cost_function(data, labels, variational):
@@ -101,16 +104,17 @@ def cost_function(data, labels, variational):
     return cost
 
 
-
 # store results for plotting
 class OptimizerLog:
     """Log to store optimizer's intermediate results"""
+
     def __init__(self):
         self.evaluations = []
         self.parameters = []
         self.costs = []
         self.count = 1
         print("hallo")
+
     def update(self, evaluation, parameter, cost, _stepsize, _accept):
         """Save intermediate results. Optimizer passes five values but we ignore the last two."""
         self.evaluations.append(evaluation)
@@ -119,17 +123,19 @@ class OptimizerLog:
         self.count += 1
         print(self.count)
 
+
 # Set up the optimization
 log = OptimizerLog()
 optimizer = SPSA(maxiter=100, callback=log.update)
 
 initial_point = np.random.random(VAR_FORM.num_parameters)
 
+
 def objective_function(variational):
     """Cost function of circuit parameters on training data.
     The optimizer will attempt to minimize this."""
     print("objective_function")
-    return cost_function(TRAIN_DATA,train_labels_oh, variational)
+    return cost_function(TRAIN_DATA, train_labels_oh, variational)
 
 
 result = optimizer.minimize(objective_function, initial_point)
@@ -137,22 +143,25 @@ result = optimizer.minimize(objective_function, initial_point)
 opt_var = result.x
 opt_value = result.fun
 
-""" def test_classifier(data, labels, variational):
-    
+
+def test_classifier(data, labels, variational):
+
     probability = classification_probability(data, variational)
-    probabilities = probability
 
     predictions = []
     for probabilities in probability:
         if probabilities[0] >= probabilities[1]:
             if probabilities[0] >= probabilities[2]:
                 predictions.append(0)
+                continue
         if probabilities[2] >= probabilities[1]:
             if probabilities[2] >= probabilities[0]:
                 predictions.append(2)
+                continue
         if probabilities[1] >= probabilities[0]:
             if probabilities[1] >= probabilities[2]:
                 predictions.append(1)
+                continue
     accuracy = 0
     for i, prediction in enumerate(predictions):
         if prediction == labels[i]:
@@ -160,41 +169,42 @@ opt_value = result.fun
     accuracy /= len(labels)
     return accuracy, predictions
 
+
 accuracy, predictions = test_classifier(TEST_DATA, test_labels_oh, opt_var)
 print(accuracy)
 
- """
+
 #
 # PLOT
 #
 
-# plot loss 
-""" fig = plt.figure()
+# plot loss
+fig = plt.figure()
 plt.plot(log.evaluations, log.costs)
-plt.xlabel('Steps')
-plt.ylabel('Cost')
+plt.xlabel("Steps")
+plt.ylabel("Cost")
 plt.title(f"{accuracy}_{feature_size}_wine_classification")
 print(plt.show())
 fig.savefig(f"plots/qfullcosts_{accuracy}_{feature_size}_{training_size}.png")
 
 # create array for plot
-correct_result = [0,0,0]
-wrong_result = [0,0,0]
+correct_result = [0, 0, 0]
+wrong_result = [0, 0, 0]
 for label, pred in zip(test_labels_oh, predictions):
     if np.array_equal(label, pred):
         print(pred)
-        correct_result[pred] += 1 
-            
+        correct_result[pred] += 1
+
     else:
-        wrong_result[pred] += 1 
+        wrong_result[pred] += 1
 
 fig1 = plt.figure()
 # Daten für drei Teams erstellen
-classes = ['0', '1', '2']
+classes = ["0", "1", "2"]
 
 # Diagrammparameter definieren
-N = 3 
-barWidth = .5
+N = 3
+barWidth = 0.5
 xloc = np.arange(N)
 
 # Gestapeltes Balkendiagramm erstellen
@@ -202,11 +212,11 @@ p1 = plt.bar(xloc, correct_result, width=barWidth)
 p2 = plt.bar(xloc, wrong_result, bottom=correct_result, width=barWidth)
 
 # Beschriftungen, Titel, Striche und Legende hinzufügen
-plt.ylabel('count')
-plt.xlabel('classes')
-plt.title('Results')
-plt.xticks(xloc, ('0', '1', '2'))
+plt.ylabel("count")
+plt.xlabel("classes")
+plt.title("Results")
+plt.xticks(xloc, ("0", "1", "2"))
 plt.yticks(np.arange(0, 41, 5))
-plt.legend((p1[0], p2[0]), ('True', 'False'))
+plt.legend((p1[0], p2[0]), ("True", "False"))
 print(plt.show())
-fig1.savefig(f"plots/qfullresults_{accuracy}_{feature_size}_{training_size}.png")  """
+fig1.savefig(f"plots/qfullresults_{accuracy}_{feature_size}_{training_size}.png")
