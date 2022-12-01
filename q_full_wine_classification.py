@@ -142,6 +142,8 @@ def objective_function(variational):
 result = optimizer.minimize(objective_function, initial_point)
 
 opt_var = result.x
+
+
 opt_value = result.fun
 
 
@@ -171,7 +173,13 @@ def test_classifier(data, labels, variational):
 
 accuracy, predictions = test_classifier(TEST_DATA, test_labels_oh, opt_var)
 print(accuracy)
-
+np.savetxt(f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt", opt_var)
+print("ergebnis")
+print(opt_var)
+y = np.loadtxt(f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt")
+print("neues Ergebnis")
+print(y)
+# das gespeicherte modell kann anschließend über "accuracy, predictions = test_classifier(TEST_DATA, test_labels_oh, y)" aufgerufen werden
 
 #
 # PLOT
