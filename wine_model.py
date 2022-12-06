@@ -20,19 +20,19 @@ class Model:
             training_size=self.training_size,
             test_size=self.test_size,
             n=self.feature_size,
-            one_hot=False,
+            one_hot=False, 
         )
         self.TRAIN_DATA, self.TRAIN_LABELS = shuffle(self.TRAIN_DATA, self.TRAIN_LABELS)
-        self.TEST_DATA, self.TEST_LABELS = shuffle(self.TEST_DATA, self.TEST_LABELS)
+        
 
         return self.TRAIN_DATA, self.TRAIN_LABELS, self.TEST_DATA, self.TEST_LABELS
 
     def prepare_circuit_structure(self):
         # prepare circuit components
         # data encoding
-        self.FEATURE_MAP = ZZFeatureMap(feature_dimension=self.feature_size, reps=3)
+        self.FEATURE_MAP = ZZFeatureMap(feature_dimension=self.feature_size, reps=5)
         # variational circuit
-        self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=3)
+        self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=5)
 
         # fügt die feature_map mit dem variational circuit zusammen
         self.WINE_CIRCUIT = self.FEATURE_MAP.compose(self.VAR_FORM)
@@ -60,15 +60,21 @@ class Model:
         """Converts a dict of bitstrings and their counts to parities and their counts"""
         shots = sum(results.values())
         probabilities = {0: 0.0, 1: 0.0, 2: 0.0}
+        number_ones = 0
         for bitstring, counts in results.items():
             if bitstring[0] == "1":
-                probabilities[2] += counts / shots
+                number_ones += counts
+                probabilities[2] += counts 
             if bitstring[1] == "1":
-                probabilities[1] += counts / shots
+                number_ones += counts
+                probabilities[1] += counts 
             if bitstring[2] == "1":
-                probabilities[0] += counts / shots
-        return probabilities
-
+                number_ones += counts
+                probabilities[0] += counts 
+        probabilities[0] = probabilities[0]/ number_ones
+        probabilities[1] = probabilities[1]/ number_ones
+        probabilities[2] = probabilities[2]/ number_ones
+        return probabilities  
         # using 6 qubits, currently not helping
         """ for bitstring, counts in results.items():
         if bitstring[0] == "1":
@@ -121,12 +127,13 @@ class Model:
     def cross_entropy_loss(self, classification, expected):
         """Calculate accuracy of predictions using cross entropy loss."""
         p = classification.get(expected)
+        print(p)
         return -np.log(p + 1e-10)
 
     # cost function
     def cost_function(self, variational):
         """Evaluates performance of our circuit with variational parameters on data"""
-        classifications = self.classification_probability(variational, self.TEST_DATA)
+        classifications = self.classification_probability(variational=variational, data=self.TRAIN_DATA)
         cost = 0
         for i, classification in enumerate(classifications):
             cost += self.cross_entropy_loss(classification, self.TRAIN_LABELS[i])

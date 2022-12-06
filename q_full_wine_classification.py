@@ -14,8 +14,8 @@ from sklearn.utils import shuffle
 # configuration
 # kleinste feature_size ist 3
 feature_size = 3
-training_size = 120
-maxiter = 200
+training_size = 100
+maxiter = 100
 
 algorithm_globals.random_seed = 3142
 np.random.seed(algorithm_globals.random_seed)
@@ -26,7 +26,6 @@ TRAIN_DATA, train_labels_oh, TEST_DATA, test_labels_oh = wine(
 )
 # shuffle dataset
 TRAIN_DATA, train_labels_oh = shuffle(TRAIN_DATA, train_labels_oh)
-TEST_DATA, test_labels_oh = shuffle(TEST_DATA, test_labels_oh)
 # prepare circuit components
 # data encoding
 FEATURE_MAP = ZZFeatureMap(feature_dimension=feature_size, reps=3)
@@ -77,13 +76,20 @@ def label_probability(results):
         if bitstring[5] == "1":
             probabilities[0] += counts / shots
     return probabilities """
+    number_ones = 0
     for bitstring, counts in results.items():
         if bitstring[0] == "1":
-            probabilities[2] += counts / shots
+            number_ones += counts
+            probabilities[2] += counts 
         if bitstring[1] == "1":
-            probabilities[1] += counts / shots
+            number_ones += counts
+            probabilities[1] += counts 
         if bitstring[2] == "1":
-            probabilities[0] += counts / shots
+            number_ones += counts
+            probabilities[0] += counts 
+    probabilities[0] = probabilities[0]/ number_ones
+    probabilities[1] = probabilities[1]/ number_ones
+    probabilities[2] = probabilities[2]/ number_ones
     return probabilities  
     """ for bitstring, counts in results.items():
         if bitstring == "100":
@@ -170,7 +176,7 @@ def objective_function(variational):
     return cost_function(TRAIN_DATA, train_labels_oh, variational)
 
 
-result = optimizer.minimize(objective_function, y)
+result = optimizer.minimize(objective_function, initial_point)
 
 opt_var = result.x
 opt_value = result.fun

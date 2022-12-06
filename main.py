@@ -5,9 +5,9 @@ import numpy as np
 
 # configuration
 feature_size = 3  # min 3
-training_size = 10
+training_size = 100
 test_size = 20
-maxiter = 1
+maxiter = 10
 seed = 3142
 
 
@@ -33,4 +33,5 @@ np.savetxt(
 )
 
 # load model
+# y muss in model.training als initial_point übergeben werden oder als opt_parameters bei model.test_classifier(opt_parameters)
 y = np.loadtxt(f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt")
