@@ -7,7 +7,7 @@ import numpy as np
 feature_size = 3  # min 3
 training_size = 100
 test_size = 20
-maxiter = 10
+maxiter = 100
 seed = 3142
 
 
