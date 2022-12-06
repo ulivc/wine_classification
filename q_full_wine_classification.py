@@ -9,28 +9,37 @@ from qiskit_machine_learning.algorithms.classifiers import VQC
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
+from sklearn.utils import shuffle
+
 # configuration
 # kleinste feature_size ist 3
-feature_size = 5
-training_size = 10
+feature_size = 3
+training_size = 120
+maxiter = 200
 
 algorithm_globals.random_seed = 3142
 np.random.seed(algorithm_globals.random_seed)
 
 # prepare data
 TRAIN_DATA, train_labels_oh, TEST_DATA, test_labels_oh = wine(
-    training_size=training_size, test_size=20, n=feature_size, one_hot=False
+    training_size=training_size, test_size=50, n=feature_size, one_hot=False
 )
-
+# shuffle dataset
+TRAIN_DATA, train_labels_oh = shuffle(TRAIN_DATA, train_labels_oh)
+TEST_DATA, test_labels_oh = shuffle(TEST_DATA, test_labels_oh)
 # prepare circuit components
 # data encoding
-FEATURE_MAP = ZZFeatureMap(feature_dimension=feature_size, reps=2)
+FEATURE_MAP = ZZFeatureMap(feature_dimension=feature_size, reps=3)
 # variational circuit
-VAR_FORM = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=2)
+VAR_FORM = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=3)
 
 # fügt die feature_map mit dem variational circuit zusammen
 WINE_CIRCUIT = FEATURE_MAP.compose(VAR_FORM)
 WINE_CIRCUIT.measure_all()
+
+# visualization of the circuit
+#FEATURE_MAP.decompose().draw("mpl").savefig("feature_map_3.png")
+#VAR_FORM.decompose().draw("mpl").savefig("var_form_3.png")
 
 # wir stellen sicher dass die daten und parameter an die richtigen Parameter übergeben werden?
 #
@@ -54,6 +63,20 @@ def label_probability(results):
     """Converts a dict of bitstrings and their counts to parities and their counts"""
     shots = sum(results.values())
     probabilities = {0: 0.0, 1: 0.0, 2: 0.0}
+    """ for bitstring, counts in results.items():
+        if bitstring[0] == "1":
+            probabilities[2] += counts / shots
+        if bitstring[1] == "1":
+            probabilities[2] += counts / shots
+        if bitstring[2] == "1":
+            probabilities[1] += counts / shots
+        if bitstring[3] == "1":
+            probabilities[1] += counts / shots
+        if bitstring[4] == "1":
+            probabilities[0] += counts / shots
+        if bitstring[5] == "1":
+            probabilities[0] += counts / shots
+    return probabilities """
     for bitstring, counts in results.items():
         if bitstring[0] == "1":
             probabilities[2] += counts / shots
@@ -61,7 +84,15 @@ def label_probability(results):
             probabilities[1] += counts / shots
         if bitstring[2] == "1":
             probabilities[0] += counts / shots
-    return probabilities
+    return probabilities  
+    """ for bitstring, counts in results.items():
+        if bitstring == "100":
+            probabilities[2] += counts / shots
+        if bitstring == "010":
+            probabilities[1] += counts / shots
+        if bitstring == "001":
+            probabilities[0] += counts / shots
+    return probabilities  """
 
 
 # quasi Ausführung des circuits
@@ -88,7 +119,9 @@ def classification_probability(data, variational):
 # loss function
 def cross_entropy_loss(classification, expected):
     """Calculate accuracy of predictions using cross entropy loss."""
-    p = classification.get(expected)
+    p = classification.get(expected) 
+    print("probability")
+    print(p)
     return -np.log(p + 1e-10)
 
 
@@ -97,7 +130,6 @@ def cost_function(data, labels, variational):
     """Evaluates performance of our circuit with variational parameters on data"""
     classifications = classification_probability(data, variational)
     cost = 0
-    print(classifications)
     for i, classification in enumerate(classifications):
         cost += cross_entropy_loss(classification, labels[i])
     cost /= len(data)
@@ -114,7 +146,6 @@ class OptimizerLog:
         self.parameters = []
         self.costs = []
         self.count = 1
-        print("hallo")
 
     def update(self, evaluation, parameter, cost, _stepsize, _accept):
         """Save intermediate results. Optimizer passes five values but we ignore the last two."""
@@ -127,23 +158,21 @@ class OptimizerLog:
 
 # Set up the optimization
 log = OptimizerLog()
-optimizer = SPSA(maxiter=2, callback=log.update)
+optimizer = SPSA(maxiter=maxiter, callback=log.update)
 
+y = np.loadtxt(f"trained_models/opt_var_0.56_3_100.txt")
 initial_point = np.random.random(VAR_FORM.num_parameters)
 
 
 def objective_function(variational):
     """Cost function of circuit parameters on training data.
     The optimizer will attempt to minimize this."""
-    print("objective_function")
     return cost_function(TRAIN_DATA, train_labels_oh, variational)
 
 
-result = optimizer.minimize(objective_function, initial_point)
+result = optimizer.minimize(objective_function, y)
 
 opt_var = result.x
-
-
 opt_value = result.fun
 
 
@@ -173,12 +202,12 @@ def test_classifier(data, labels, variational):
 
 accuracy, predictions = test_classifier(TEST_DATA, test_labels_oh, opt_var)
 print(accuracy)
-np.savetxt(f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt", opt_var)
-print("ergebnis")
-print(opt_var)
+np.savetxt(
+    f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt", opt_var
+)
+
 y = np.loadtxt(f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt")
-print("neues Ergebnis")
-print(y)
+
 # das gespeicherte modell kann anschließend über "accuracy, predictions = test_classifier(TEST_DATA, test_labels_oh, y)" aufgerufen werden
 
 #
@@ -190,7 +219,9 @@ fig = plt.figure()
 plt.plot(log.evaluations, log.costs)
 plt.xlabel("Steps")
 plt.ylabel("Cost")
-plt.title(f"{accuracy}_{feature_size}_wine_classification")
+plt.title(
+    f"Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: 3"
+)
 print(plt.show())
 fig.savefig(f"plots/qfullcosts_{accuracy}_{feature_size}_{training_size}.png")
 
@@ -199,9 +230,7 @@ correct_result = [0, 0, 0]
 wrong_result = [0, 0, 0]
 for label, pred in zip(test_labels_oh, predictions):
     if np.array_equal(label, pred):
-        print(pred)
         correct_result[pred] += 1
-
     else:
         wrong_result[pred] += 1
 
@@ -221,7 +250,9 @@ p2 = plt.bar(xloc, wrong_result, bottom=correct_result, width=barWidth)
 # Beschriftungen, Titel, Striche und Legende hinzufügen
 plt.ylabel("count")
 plt.xlabel("classes")
-plt.title("Results")
+plt.title(
+    f"Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: 3"
+)
 plt.xticks(xloc, ("0", "1", "2"))
 plt.yticks(np.arange(0, 41, 5))
 plt.legend((p1[0], p2[0]), ("True", "False"))
