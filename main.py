@@ -5,9 +5,9 @@ import numpy as np
 
 # configuration
 feature_size = 3  # min 3
-training_size = 20
+training_size = 100
 test_size = 100
-maxiter = 1
+maxiter = 300
 seed = 3142
 reps = 1
 
@@ -23,7 +23,7 @@ opt_parameters, opt_value, evaluation, costs = model.training()
 accuracy, predictions = model.test_classifier(opt_parameters)
 print(accuracy)
 
-""" # plot
+# plot
 plotting.plot_loss(
     evaluation, costs, accuracy, feature_size, training_size, maxiter, reps, test_size
 )
@@ -43,7 +43,7 @@ np.savetxt(
     f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}.txt",
     opt_parameters,
 )
- """
+ 
 
 # load model
 # y muss in model.training als initial_point übergeben werden oder als opt_parameters bei model.test_classifier(opt_parameters)
