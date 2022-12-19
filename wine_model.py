@@ -66,7 +66,6 @@ class Model:
         shots = sum(results.values())
         probabilities = {0: 0.0, 1: 0.0, 2: 0.0}
         number_ones = 0
-        print(results)
         """ for bitstring, counts in results.items():
             if bitstring[0] == "1":
                 number_ones += counts
@@ -133,7 +132,7 @@ class Model:
 
         # Simulator
         backend = BasicAer.get_backend("qasm_simulator")
-        results = execute(circuits, backend).result()
+        results = execute(circuits, backend, seed_transpiler=3142).result()
         classification = [
             self.label_probability(results.get_counts(c)) for c in circuits
         ]
@@ -181,19 +180,9 @@ class Model:
     def test_classifier(self, variational):
         probability = self.classification_probability(variational, self.TEST_DATA)
         predictions = []
-        for probabilities in probability:
-            if probabilities[0] >= probabilities[1]:
-                if probabilities[0] >= probabilities[2]:
-                    predictions.append(0)
-                    continue
-            if probabilities[2] >= probabilities[1]:
-                if probabilities[2] >= probabilities[0]:
-                    predictions.append(2)
-                    continue
-            if probabilities[1] >= probabilities[0]:
-                if probabilities[1] >= probabilities[2]:
-                    predictions.append(1)
-                    continue
+        # np.argmax
+        for i in probability:
+            predictions.append(np.argmax([i.get(0), i.get(1), i.get(2)]))
         accuracy = 0
         for i, prediction in enumerate(predictions):
             if prediction == self.TEST_LABELS[i]:
