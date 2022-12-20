@@ -166,7 +166,9 @@ class Model:
         # Set up the optimization
         log = optimizer_log.OptimizerLog()
         # optimizer = SPSA(maxiter=self.maxiter, callback=log.update)
-        optimizer = GradientDescent(maxiter=self.maxiter, callback=log.update)
+        optimizer = GradientDescent(
+            maxiter=self.maxiter, learning_rate=0.1, callback=log.update
+        )
 
         # aktuelles Problem
         result = optimizer.minimize(self._objective_function, initial_point)

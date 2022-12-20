@@ -9,10 +9,11 @@ from time import localtime, strftime
 starting_time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
 
 # configuration
+training_size = 128  # fixed
+test_size = 50
+
 feature_size = 3  # min 3
-training_size = 100
-test_size = 100
-maxiter = 1
+maxiter = 100
 seed = 3142
 reps = 1
 train = True
@@ -23,7 +24,7 @@ save = True
 # training
 
 
-dataset = dataset.prepare_data(training_size, feature_size)
+dataset = dataset.prepare_data(training_size, test_size, feature_size)
 
 model = wine_model.Model(
     training_size, maxiter, feature_size, test_size, seed, reps, dataset

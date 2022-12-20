@@ -16,10 +16,9 @@ seed = 3142
 reps = 1
 
 
-
 model = wine_model.Model(training_size, maxiter, feature_size, test_size, seed, reps)
 TRAIN_DATA, TRAIN_LABELS, TEST_DATA, TEST_LABELS = model.prepare_data()
-model.prepare_circuit_structure()
+model._prepare_circuit_structure()
 
 opt_parameters = np.loadtxt(f"trained_models/opt_var_0.74_3_100.txt")
 
@@ -31,4 +30,3 @@ circuits = []
 # Simulator
 backend = BasicAer.get_backend("qasm_simulator")
 results = execute(circuits, backend).result()
-
