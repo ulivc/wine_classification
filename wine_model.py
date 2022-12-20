@@ -3,34 +3,28 @@ from qiskit.utils import algorithm_globals
 from qiskit_machine_learning.datasets import wine
 from qiskit.circuit.library import ZZFeatureMap, TwoLocal
 from qiskit import BasicAer, execute
-from qiskit.algorithms.optimizers import SPSA
+from qiskit.algorithms.optimizers import SPSA, GradientDescent
 from sklearn.utils import shuffle
+import optimizer_log
 
 
 class Model:
-    def __init__(self, training_size, maxiter, feature_size, test_size, seed, reps):
+    def __init__(
+        self, training_size, maxiter, feature_size, test_size, seed, reps, dataset
+    ):
         self.training_size = training_size
         self.feature_size = feature_size
         self.test_size = test_size
         self.maxiter = maxiter
         self.seed = seed
         self.reps = reps
+        self.train_data = dataset[0]
+        self.train_labels = dataset[1]
+        self.test_data = dataset[2]
+        self.test_labels = dataset[3]
+        self._prepare_circuit_structure()
 
-    def prepare_data(self):
-        # prepare data
-        self.TRAIN_DATA, self.TRAIN_LABELS, self.TEST_DATA, self.TEST_LABELS = wine(
-            training_size=self.training_size,
-            test_size=self.test_size,
-            n=self.feature_size,
-            one_hot=False,
-        )
-        self.TRAIN_DATA, self.TRAIN_LABELS = shuffle(
-            self.TRAIN_DATA, self.TRAIN_LABELS, random_state=3142
-        )
-
-        return self.TRAIN_DATA, self.TRAIN_LABELS, self.TEST_DATA, self.TEST_LABELS
-
-    def prepare_circuit_structure(self):
+    def _prepare_circuit_structure(self):
         # prepare circuit components
         # data encoding
         self.FEATURE_MAP = ZZFeatureMap(
@@ -61,7 +55,7 @@ class Model:
             parameters[p] = variational[i]
         return self.WINE_CIRCUIT.assign_parameters(parameters)
 
-    def label_probability(self, results):
+    def _label_probability(self, results):
         """Converts a dict of bitstrings and their counts to parities and their counts"""
         shots = sum(results.values())
         probabilities = {0: 0.0, 1: 0.0, 2: 0.0}
@@ -118,7 +112,7 @@ class Model:
         return probabilities  """
 
     # quasi Ausführung des circuits
-    def classification_probability(self, variational, data):
+    def _classification_probability(self, variational, data):
         """Classify data points using given parameters.
         Args:
             data(list): Set of data points to classify
@@ -132,36 +126,36 @@ class Model:
 
         # Simulator
         backend = BasicAer.get_backend("qasm_simulator")
-        results = execute(circuits, backend, seed_transpiler=3142).result()
+        results = execute(circuits, backend, seed_simulator=3142).result()
         classification = [
-            self.label_probability(results.get_counts(c)) for c in circuits
+            self._label_probability(results.get_counts(c)) for c in circuits
         ]
 
         return classification
 
     # loss function
-    def cross_entropy_loss(self, classification, expected):
+    def _cross_entropy_loss(self, classification, expected):
         """Calculate accuracy of predictions using cross entropy loss."""
         p = classification.get(expected)
         return -np.log(p + 1e-10)
 
     # cost function
-    def cost_function(self, variational):
+    def _cost_function(self, variational):
         """Evaluates performance of our circuit with variational parameters on data"""
-        classifications = self.classification_probability(
-            variational=variational, data=self.TRAIN_DATA
+        classifications = self._classification_probability(
+            variational=variational, data=self.train_data
         )
         cost = 0
         for i, classification in enumerate(classifications):
-            cost += self.cross_entropy_loss(classification, self.TRAIN_LABELS[i])
-        cost /= len(self.TRAIN_DATA)
+            cost += self._cross_entropy_loss(classification, self.train_labels[i])
+        cost /= len(self.train_data)
         print(cost)
         return cost
 
-    def objective_function(self, variational):
+    def _objective_function(self, variational):
         """Cost function of circuit parameters on training data.
         The optimizer will attempt to minimize this."""
-        return self.cost_function(variational)
+        return self._cost_function(variational)
 
     def training(self):
         algorithm_globals.random_seed = self.seed
@@ -170,40 +164,23 @@ class Model:
         initial_point = np.random.random(self.VAR_FORM.num_parameters)
         # initial_point = np.loadtxt(f"trained_models/opt_var_0.58_3_100.txt")
         # Set up the optimization
-        log = OptimizerLog()
-        optimizer = SPSA(maxiter=self.maxiter, callback=log.update)
+        log = optimizer_log.OptimizerLog()
+        # optimizer = SPSA(maxiter=self.maxiter, callback=log.update)
+        optimizer = GradientDescent(maxiter=self.maxiter, callback=log.update)
 
         # aktuelles Problem
-        result = optimizer.minimize(self.objective_function, initial_point)
+        result = optimizer.minimize(self._objective_function, initial_point)
         return result.x, result.fun, log.evaluations, log.costs
 
     def test_classifier(self, variational):
-        probability = self.classification_probability(variational, self.TEST_DATA)
+        probability = self._classification_probability(variational, self.test_data)
         predictions = []
         # np.argmax
         for i in probability:
             predictions.append(np.argmax([i.get(0), i.get(1), i.get(2)]))
         accuracy = 0
         for i, prediction in enumerate(predictions):
-            if prediction == self.TEST_LABELS[i]:
+            if prediction == self.test_labels[i]:
                 accuracy += 1
-        accuracy /= len(self.TEST_LABELS)
+        accuracy /= len(self.test_labels)
         return accuracy, predictions
-
-
-class OptimizerLog:
-    """Log to store optimizer's intermediate results"""
-
-    def __init__(self):
-        self.evaluations = []
-        self.parameters = []
-        self.costs = []
-        self.count = 1
-
-    def update(self, evaluation, parameter, cost, _stepsize, _accept):
-        """Save intermediate results. Optimizer passes five values but we ignore the last two."""
-        self.evaluations.append(evaluation)
-        self.parameters.append(parameter)
-        self.costs.append(cost)
-        self.count += 1
-        print(self.count)
