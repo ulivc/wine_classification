@@ -34,15 +34,21 @@ for i in range(test_size):
         TRAIN_DATA, TRAIN_LABELS, TEST_DATA, TEST_LABELS = model.prepare_data()
         model.prepare_circuit_structure()
 
+        number = 0
+        for p in TEST_LABELS:
+            if p == 2:
+                number += 1
+
         opt_parameters = np.loadtxt(
             f"trained_models/opt_var_0.76_3_120_2022-12-13_14-56-19.txt"
         )
         # test
-        accuracy, predictions = model.test_classifier(opt_parameters)
-        print(accuracy)
+        # accuracy, predictions = model.test_classifier(opt_parameters)
+        # print(accuracy)
 
-        accu.append(accuracy)
-        size.append(i)
+        # accu.append(accuracy)
+        accu.append(number)
+        size.append(test_size)
         print(i)
 fig = plt.figure()
 plt.plot(size, accu)
@@ -50,4 +56,4 @@ plt.xlabel("Size")
 plt.ylabel("Accuracy")
 plt.title(f"test_test_size")
 print(plt.show())
-fig.savefig(f"testing_over_test_size.png")
+fig.savefig(f"testing_class2_test_size.png")
