@@ -6,7 +6,15 @@ import numpy as np
 
 
 def plot_loss(
-    evaluations, costs, accuracy, feature_size, training_size, maxiter, reps, test_size, starting_time
+    evaluations,
+    costs,
+    accuracy,
+    feature_size,
+    training_size,
+    maxiter,
+    reps,
+    test_size,
+    starting_time,
 ):
     # plot loss
     fig = plt.figure()
@@ -14,11 +22,11 @@ def plot_loss(
     plt.xlabel("Steps")
     plt.ylabel("Cost")
     plt.title(
-        f"Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
+        f"Loss \n Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
     )
     print(plt.show())
     fig.savefig(
-        f"plots/qfullcosts_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
+        f"plots/teacher/qfullcosts_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
     )
 
 
@@ -31,7 +39,7 @@ def plot_results(
     maxiter,
     reps,
     test_size,
-    starting_time
+    starting_time,
 ):
     # create array for plot
     correct_result = [0, 0, 0]
@@ -61,14 +69,14 @@ def plot_results(
     plt.ylabel("count")
     plt.xlabel("classes")
     plt.title(
-        f"Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
+        f"Results \n Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
     )
     plt.xticks(xloc, ("0", "1", "2"))
     plt.yticks(np.arange(0, 41, 5))
     plt.legend((p1[0], p2[0]), ("True", "False"))
     print(plt.show())
     fig1.savefig(
-        f"plots/qfullresults_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
+        f"plots/teacher/qfullresults_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
     )
 
 
@@ -92,7 +100,7 @@ def plot_loss_student(
     plt.xlabel("Steps")
     plt.ylabel("Cost")
     plt.title(
-        f"Knowledge_Distillation \n Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
+        f"Knowledge_Distillation Loss\n Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
     )
     print(plt.show())
     fig.savefig(
@@ -139,7 +147,7 @@ def plot_results_student(
     plt.ylabel("count")
     plt.xlabel("classes")
     plt.title(
-        f"Knowledge_Distillation \n Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
+        f"Knowledge_Distillation Results \n Accuracy: {accuracy}, Feature size: {feature_size}, Training_size: {training_size}, Maxiter {maxiter}, Reps: {reps}"
     )
     plt.xticks(xloc, ("0", "1", "2"))
     plt.yticks(np.arange(0, 41, 5))

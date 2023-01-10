@@ -3,6 +3,7 @@ import wine_model
 import plotting
 import dataset
 import optimizer_log
+import circuit_library
 import numpy as np
 from qiskit import BasicAer, execute
 from qiskit.circuit.library import ZZFeatureMap, TwoLocal
@@ -19,7 +20,7 @@ starting_time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
 feature_size = 3  # min 3
 training_size = 128
 test_size = 50
-maxiter = 200
+maxiter = 20
 seed = 3142
 reps = 1
 
@@ -35,7 +36,8 @@ VAR_FORM = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
 # student circuit components
 INVERSE_FEATURE_MAP = FEATURE_MAP.inverse()
 
-VAR_FORM_STUDENT = TwoLocal(feature_size, "ry", "cz", reps=reps)
+# VAR_FORM_STUDENT = circuit_library.student_circuit_13()
+VAR_FORM_STUDENT = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
 INVERSE_VAR_FORM = VAR_FORM_STUDENT.inverse()
 
 # fügt die feature_map mit dem variational circuit zusammen
@@ -44,7 +46,7 @@ student_circuit = INVERSE_VAR_FORM.compose(INVERSE_FEATURE_MAP)
 
 
 teacher_parameters = np.loadtxt(
-    f"trained_models/opt_var_0.8_3_128_2022-12-21_23-15-19.txt"
+    f"trained_models/teacher/opt_var_0.8_3_128_2022-12-21_23-15-19.txt"
 )
 # algorithm_globals.random_seed = 3142
 # np.random.seed(algorithm_globals.random_seed)
@@ -69,9 +71,10 @@ def student_circuit_instance(circuit, d, variational):
     # d_student = d[::-1]
     for i, p in enumerate(FEATURE_MAP.ordered_parameters):
         parameters[p] = d[i]
-    for i, p in enumerate(VAR_FORM_STUDENT.ordered_parameters):
+    for i, p in enumerate(VAR_FORM_STUDENT.parameters):
         parameters[p] = variational[i]
-    return circuit.assign_parameters(parameters)
+    # return circuit.assign_parameters(parameters)
+    return circuit.bind_parameters(parameters)
 
 
 # composed_circuit.decompose().draw("mpl").savefig("circuit1.png")
@@ -111,7 +114,7 @@ def training():
 
     initial_point = np.random.random(VAR_FORM_STUDENT.num_parameters)
     log = optimizer_log.OptimizerLog()
-    optimizer = GradientDescent(maxiter=maxiter, learning_rate=0.4, callback=log.update)
+    optimizer = GradientDescent(maxiter=maxiter, learning_rate=0.2, callback=log.update)
     result = optimizer.minimize(objective_function, initial_point)
     return result.x, result.fun, log.evaluations, log.costs
 

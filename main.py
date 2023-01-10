@@ -13,7 +13,7 @@ training_size = 128  # fixed
 test_size = 50
 
 feature_size = 3  # min 3
-maxiter = 400
+maxiter = 3
 seed = 3142
 reps = 1
 train = True
@@ -32,10 +32,20 @@ model = wine_model.Model(
 
 
 if train:
-    opt_parameters, opt_value, evaluation, costs = model.training()
+    opt_parameters, opt_value, evaluation, costs, parameters = model.training()
 else:
     opt_parameters = np.loadtxt(f"trained_models/opt_var_0.74_3_100.txt")
 
+print(parameters)
+
+for i in [1, 2]:
+    accuracy, predictions = model.test_classifier(parameters[i])
+    print(accuracy)
+""" 
+for i in [50, 100, 150, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380]:
+    accuracy, predictions = model.test_classifier(parameters[i])
+    print(accuracy)
+ """
 # test
 accuracy, predictions = model.test_classifier(opt_parameters)
 print(accuracy)
@@ -69,7 +79,7 @@ plotting.plot_results(
 # save model
 if save and train:
     np.savetxt(
-        f"trained_models/opt_var_{accuracy}_{feature_size}_{training_size}_{starting_time}.txt",
+        f"trained_models/teacher/opt_var_{accuracy}_{feature_size}_{training_size}_{starting_time}.txt",
         opt_parameters,
     )
 

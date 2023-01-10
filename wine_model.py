@@ -34,10 +34,10 @@ class Model:
         # self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
 
         # variational circuit NLocal
-        self.VAR_FORM = NLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
+        self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
 
         # variational circuit Pauli-Two-Design
-        #self.VAR_FORM = PauliTwoDesign(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
+        # self.VAR_FORM = PauliTwoDesign(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
 
         # fügt die feature_map mit dem variational circuit zusammen
         self.WINE_CIRCUIT = self.FEATURE_MAP.compose(self.VAR_FORM)
@@ -178,7 +178,7 @@ class Model:
         # optimizer = SPSA(maxiter=self.maxiter, callback = log.update)
         # aktuelles Problem
         result = optimizer.minimize(self._objective_function, initial_point)
-        return result.x, result.fun, log.evaluations, log.costs
+        return result.x, result.fun, log.evaluations, log.costs, log.parameters
 
     def test_classifier(self, variational):
         probability = self._classification_probability(variational, self.test_data)
