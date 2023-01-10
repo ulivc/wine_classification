@@ -34,7 +34,7 @@ class Model:
         # self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
 
         # variational circuit NLocal
-        self.VAR_FORM = NLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
+        self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
 
         # variational circuit Pauli-Two-Design
         #self.VAR_FORM = PauliTwoDesign(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
