@@ -30,16 +30,15 @@ for i in range(test_size):
     if i:
         test_size = i
         # training
-        
+
         datase = dataset.prepare_data(training_size, test_size, feature_size)
 
         model = wine_model.Model(
             training_size, maxiter, feature_size, test_size, seed, reps, datase
         )
 
-
         opt_parameters = np.loadtxt(
-            f"trained_models/opt_var_0.74_3_100.txt"
+            f"trained_models/opt_var_0.71_3_100_2022-12-22_08-21-13.txt"
         )
         # test
         accuracy, predictions = model.test_classifier(opt_parameters)

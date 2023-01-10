@@ -1,7 +1,7 @@
 import numpy as np
 from qiskit.utils import algorithm_globals
 from qiskit_machine_learning.datasets import wine
-from qiskit.circuit.library import ZZFeatureMap, TwoLocal
+from qiskit.circuit.library import ZZFeatureMap, TwoLocal, NLocal, PauliTwoDesign
 from qiskit import BasicAer, execute
 from qiskit.algorithms.optimizers import SPSA, GradientDescent
 from sklearn.utils import shuffle
@@ -30,8 +30,14 @@ class Model:
         self.FEATURE_MAP = ZZFeatureMap(
             feature_dimension=self.feature_size, reps=self.reps
         )
-        # variational circuit
-        self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
+        # variational circuit TwoLocal
+        # self.VAR_FORM = TwoLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
+
+        # variational circuit NLocal
+        self.VAR_FORM = NLocal(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
+
+        # variational circuit Pauli-Two-Design
+        #self.VAR_FORM = PauliTwoDesign(self.feature_size, ["ry", "rz"], "cz", reps=self.reps)
 
         # fügt die feature_map mit dem variational circuit zusammen
         self.WINE_CIRCUIT = self.FEATURE_MAP.compose(self.VAR_FORM)
@@ -41,7 +47,7 @@ class Model:
         # FEATURE_MAP.decompose().draw("mpl").savefig("feature_map_3.png")
         # VAR_FORM.decompose().draw("mpl").savefig("var_form_3.png")
 
-    def circuit_instance(self, data, variational):
+    def _circuit_instance(self, data, variational):
         """Assigns parameter values to 'AD_HOC_CIRCUIT'
         Args:
             data(list):Data values for the feature map
@@ -122,7 +128,7 @@ class Model:
         """
 
         # selbstgeschriebene Funktion zur Parameterübergabe
-        circuits = [self.circuit_instance(d, variational) for d in data]
+        circuits = [self._circuit_instance(d, variational) for d in data]
 
         # Simulator
         backend = BasicAer.get_backend("qasm_simulator")
@@ -167,9 +173,9 @@ class Model:
         log = optimizer_log.OptimizerLog()
         # optimizer = SPSA(maxiter=self.maxiter, callback=log.update)
         optimizer = GradientDescent(
-            maxiter=self.maxiter, learning_rate=0.1, callback=log.update
+            maxiter=self.maxiter, learning_rate=0.2, callback=log.update
         )
-
+        # optimizer = SPSA(maxiter=self.maxiter, callback = log.update)
         # aktuelles Problem
         result = optimizer.minimize(self._objective_function, initial_point)
         return result.x, result.fun, log.evaluations, log.costs

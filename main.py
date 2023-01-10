@@ -13,7 +13,7 @@ training_size = 128  # fixed
 test_size = 50
 
 feature_size = 3  # min 3
-maxiter = 100
+maxiter = 400
 seed = 3142
 reps = 1
 train = True
@@ -51,6 +51,7 @@ if train:
         maxiter,
         reps,
         test_size,
+        starting_time,
     )
 
 plotting.plot_results(
@@ -62,6 +63,7 @@ plotting.plot_results(
     maxiter,
     reps,
     test_size,
+    starting_time,
 )
 
 # save model
