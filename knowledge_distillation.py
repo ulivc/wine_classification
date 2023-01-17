@@ -20,7 +20,7 @@ starting_time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
 feature_size = 3  # min 3
 training_size = 128
 test_size = 50
-maxiter = 20
+maxiter = 2
 seed = 3142
 reps = 1
 
@@ -36,8 +36,8 @@ VAR_FORM = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
 # student circuit components
 INVERSE_FEATURE_MAP = FEATURE_MAP.inverse()
 
-# VAR_FORM_STUDENT = circuit_library.student_circuit_13()
-VAR_FORM_STUDENT = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
+VAR_FORM_STUDENT = circuit_library.student_circuit_5()
+#VAR_FORM_STUDENT = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
 INVERSE_VAR_FORM = VAR_FORM_STUDENT.inverse()
 
 # fügt die feature_map mit dem variational circuit zusammen
@@ -46,7 +46,7 @@ student_circuit = INVERSE_VAR_FORM.compose(INVERSE_FEATURE_MAP)
 
 
 teacher_parameters = np.loadtxt(
-    f"trained_models/teacher/opt_var_0.8_3_128_2022-12-21_23-15-19.txt"
+    f"trained_models/teacher/opt_var_0.82_3_128_2022-12-21_10-53-22.txt"
 )
 # algorithm_globals.random_seed = 3142
 # np.random.seed(algorithm_globals.random_seed)

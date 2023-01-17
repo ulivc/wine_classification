@@ -104,7 +104,7 @@ def plot_loss_student(
     )
     print(plt.show())
     fig.savefig(
-        f"plots/student/qfullcosts_student_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
+        f"qfullcosts_student_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
     )
 
 
@@ -154,5 +154,5 @@ def plot_results_student(
     plt.legend((p1[0], p2[0]), ("True", "False"))
     print(plt.show())
     fig1.savefig(
-        f"plots/student/qfullresults_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
+        f"qfullresults_{accuracy}_{feature_size}_{training_size}_{test_size}_{starting_time}.png"
     )
