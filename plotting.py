@@ -5,7 +5,7 @@ import numpy as np
 # plots teacher training
 
 
-def plot_loss(
+def plot_loss_teacher(
     evaluations,
     costs,
     accuracy,
@@ -30,7 +30,7 @@ def plot_loss(
     )
 
 
-def plot_results(
+def plot_results_teacher(
     TEST_LABELS,
     predictions,
     accuracy,
@@ -46,7 +46,6 @@ def plot_results(
     wrong_result = [0, 0, 0]
     for label, pred in zip(TEST_LABELS, predictions):
         if np.array_equal(label, pred):
-            print(pred)
             correct_result[pred] += 1
 
         else:
@@ -124,7 +123,6 @@ def plot_results_student(
     wrong_result = [0, 0, 0]
     for label, pred in zip(TEST_LABELS, predictions):
         if np.array_equal(label, pred):
-            print(pred)
             correct_result[pred] += 1
 
         else:

@@ -180,15 +180,20 @@ class Model:
         result = optimizer.minimize(self._objective_function, initial_point)
         return result.x, result.fun, log.evaluations, log.costs, log.parameters
 
-    def test_classifier(self, variational):
-        probability = self._classification_probability(variational, self.test_data)
+    def test_classifier(self, variational, test=True):
+        data = self.train_data
+        labels = self.train_labels
+        if test:
+            data = self.test_data
+            labels = self.test_labels
+        probability = self._classification_probability(variational, data)
         predictions = []
         # np.argmax
         for i in probability:
             predictions.append(np.argmax([i.get(0), i.get(1), i.get(2)]))
         accuracy = 0
         for i, prediction in enumerate(predictions):
-            if prediction == self.test_labels[i]:
+            if prediction == labels[i]:
                 accuracy += 1
-        accuracy /= len(self.test_labels)
+        accuracy /= len(labels)
         return accuracy, predictions
