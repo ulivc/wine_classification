@@ -20,7 +20,7 @@ starting_time = strftime("%Y-%m-%d_%H-%M-%S", localtime())
 feature_size = 3  # min 3
 training_size = 128
 test_size = 50
-maxiter = 2
+maxiter = 200
 seed = 3142
 reps = 1
 
@@ -36,8 +36,8 @@ VAR_FORM = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
 # student circuit components
 INVERSE_FEATURE_MAP = FEATURE_MAP.inverse()
 
-VAR_FORM_STUDENT = circuit_library.student_circuit_5()
-#VAR_FORM_STUDENT = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
+VAR_FORM_STUDENT = circuit_library.student_circuit_6()
+# VAR_FORM_STUDENT = TwoLocal(feature_size, ["ry", "rz"], "cz", reps=reps)
 INVERSE_VAR_FORM = VAR_FORM_STUDENT.inverse()
 
 # fügt die feature_map mit dem variational circuit zusammen
@@ -114,9 +114,9 @@ def training():
 
     initial_point = np.random.random(VAR_FORM_STUDENT.num_parameters)
     log = optimizer_log.OptimizerLog()
-    optimizer = GradientDescent(maxiter=maxiter, learning_rate=0.2, callback=log.update)
+    optimizer = GradientDescent(maxiter=maxiter, learning_rate=0.4, callback=log.update)
     result = optimizer.minimize(objective_function, initial_point)
-    return result.x, result.fun, log.evaluations, log.costs
+    return result.x, result.fun, log.evaluations, log.costs, log.parameters
 
 
 def label_probability(results):
@@ -124,17 +124,6 @@ def label_probability(results):
     shots = sum(results.values())
     probabilities = {0: 0.0, 1: 0.0, 2: 0.0}
     number_ones = 0
-    """ for bitstring, counts in results.items():
-            if bitstring[0] == "1":
-                number_ones += counts
-                probabilities[2] += counts / shots
-            if bitstring[1] == "1":
-                number_ones += counts
-                probabilities[1] += counts / shots
-            if bitstring[2] == "1":
-                number_ones += counts
-                probabilities[0] += counts / shots
-        return probabilities """
     for bitstring, counts in results.items():
         if bitstring[0] == "1":
             number_ones += counts
@@ -151,12 +140,10 @@ def label_probability(results):
     return probabilities
 
 
-def test(opt_parameters):
+def test(opt_parameters, data, label):
     circuit = student_circuit.inverse()
     circuit.measure_all()
-    circuits = [
-        student_circuit_instance(circuit, d, opt_parameters) for d in data_array[2]
-    ]
+    circuits = [student_circuit_instance(circuit, d, opt_parameters) for d in data]
     backend = BasicAer.get_backend("qasm_simulator")
     results = execute(circuits, backend, seed_simulator=3142).result()
     probability = [label_probability(results.get_counts(c)) for c in circuits]
@@ -167,16 +154,28 @@ def test(opt_parameters):
         predictions.append(np.argmax([i.get(0), i.get(1), i.get(2)]))
     accuracy = 0
     for i, prediction in enumerate(predictions):
-        if prediction == data_array[3][i]:
+        if prediction == label[i]:
             accuracy += 1
-    accuracy /= len(data_array[3])
-    print(accuracy)
+    accuracy /= len(label)
     return accuracy, predictions
 
 
-opt_parameters, opt_value, evaluation, costs = training()
+opt_parameters, opt_value, evaluation, costs, parameters = training()
 
-accuracy, predictions = test(opt_parameters)
+
+train_accuracy, train_predictions = test(opt_parameters, data_array[0], data_array[1])
+print("Accuracy train_data:")
+print(train_accuracy)
+
+accuracy, predictions = test(opt_parameters, data_array[2], data_array[3])
+print("Accuracy test_data:")
+print(accuracy)
+
+print("Validation:")
+for i in [x for x in range(maxiter) if x % 40 == 0]:
+    val_accuracy, val_predictions = test(parameters[i], data_array[2], data_array[3])
+    print("Test accuracy after" + i + "iterations:" + val_accuracy)
+    
 
 plotting.plot_loss_student(
     evaluation,
